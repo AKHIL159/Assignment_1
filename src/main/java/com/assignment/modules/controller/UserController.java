@@ -31,8 +31,6 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-
-    // NEW: Get user by email
     @GetMapping("/email/{email}")
     public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
         return userService.getUserByEmail(email)
@@ -40,7 +38,6 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // NEW: Update user by email
     @PutMapping("/email/{email}")
     public ResponseEntity<?> updateUserByEmail(@PathVariable String email, @RequestBody User user) {
         try {
@@ -50,7 +47,6 @@ public class UserController {
         }
     }
 
-    // NEW: Delete user by email
     @DeleteMapping("/email/{email}")
     public ResponseEntity<?> deleteUserByEmail(@PathVariable String email) {
         userService.deleteUserByEmail(email);
