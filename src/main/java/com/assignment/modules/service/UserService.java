@@ -18,9 +18,6 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
 
     public List<UserDTO> getAllUsers() {
         return userRepository.findAllProjectedBy();
@@ -52,13 +49,14 @@ public class UserService {
         }
     }
 
-//
-//    public User createUser(User user) {
-//        if (userRepository.existsByEmail(user.getEmail())) {
+
+    public User createUser(User user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            return null;
 //            throw new IllegalArgumentException("Email already exists");
-//        }
-//        return userRepository.save(user);
-//    }
+        }
+        return userRepository.save(user);
+    }
 
 //    public Optional<User> getUserByEmail(String email) {
 //        return userRepository.findByEmail(email);
