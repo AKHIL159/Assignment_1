@@ -22,10 +22,10 @@ public class UserService {
     private AuditService auditService;
 
   // ----- new functions which return completable future -----
-  @Async("taskExecutor")
-  public CompletableFuture<List<UserDTO>> getAllUsers() {
-      return CompletableFuture.completedFuture(userRepository.findAllProjectedBy());
-  }
+    @Async("taskExecutor")
+    public CompletableFuture<List<UserDTO>> getAllUsers() {
+        return CompletableFuture.completedFuture(userRepository.findAllProjectedBy());
+    }
 
     @Async("taskExecutor")
     public CompletableFuture<UserDTO> getUserByEmail(String email) {
