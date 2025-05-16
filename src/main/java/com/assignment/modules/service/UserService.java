@@ -4,14 +4,13 @@ import com.assignment.modules.dto.UserDTO;
 import com.assignment.modules.model.User;
 import com.assignment.modules.repository.UserRepository;
 
+import com.mongodb.DuplicateKeyException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class UserService {
@@ -22,51 +21,100 @@ public class UserService {
     @Autowired
     private AuditService auditService;
 
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAllProjectedBy();
+  // ----- new functions which return completable future -----
+  @Async("taskExecutor")
+  public CompletableFuture<List<UserDTO>> getAllUsers() {
+      return CompletableFuture.completedFuture(userRepository.findAllProjectedBy());
+  }
+
+    @Async("taskExecutor")
+    public CompletableFuture<UserDTO> getUserByEmail(String email) {
+        return CompletableFuture.completedFuture(userRepository.findProjectedByEmail(email));
     }
 
-    public UserDTO getUserByEmail(String email) {
-        return userRepository.findProjectedByEmail(email);
+    @Async("taskExecutor")
+    public CompletableFuture<User> createUser(User user) {
+        try {
+            User savedUser = userRepository.save(user);
+            CompletableFuture.runAsync(() -> auditService.logToFile(savedUser));
+            CompletableFuture.runAsync(() -> auditService.saveToAuditTable(savedUser));
+            return CompletableFuture.completedFuture(savedUser);
+        } catch (DuplicateKeyException e) {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
-    public User updateUser(String email, User user) {
+    @Async("taskExecutor")
+    public CompletableFuture<User> updateUser(String email, User user) {
         User existingUser = userRepository.findByEmail(email);
         if (existingUser != null) {
             existingUser.setName(user.getName());
             existingUser.setEmail(user.getEmail());
             existingUser.setAge(user.getAge());
-            return userRepository.save(existingUser);
+            return CompletableFuture.completedFuture(userRepository.save(existingUser));
         } else {
-            return null;
+            return CompletableFuture.completedFuture(null);
         }
     }
 
-    public boolean deleteUser(String email) {
+    @Async("taskExecutor")
+    public CompletableFuture<Boolean> deleteUser(String email) {
         User existingUser = userRepository.findByEmail(email);
         if (existingUser != null) {
             userRepository.deleteByEmail(email);
-            return true;
+            return CompletableFuture.completedFuture(true);
         } else {
-            return false;
+            return CompletableFuture.completedFuture(false);
         }
     }
 
 
-    public User createUser(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            return null;
-        }
-
-        User savedUser = userRepository.save(user);
-
-//        // Run logging and audit in parallel
-//        CompletableFuture.runAsync(() -> auditService.logToFile(savedUser));
-//        CompletableFuture.runAsync(() -> auditService.saveToAuditTable(savedUser));
-        auditService.logToFile(savedUser);
-        auditService.saveToAuditTable(savedUser);
-        return savedUser;
-    }
+// -------------This the DTO version of the code------------------
+//    public List<UserDTO> getAllUsers() {
+//        return userRepository.findAllProjectedBy();
+//    }
+//
+//    public UserDTO getUserByEmail(String email) {
+//        return userRepository.findProjectedByEmail(email);
+//    }
+//
+//    public User updateUser(String email, User user) {
+//        User existingUser = userRepository.findByEmail(email);
+//        if (existingUser != null) {
+//            existingUser.setName(user.getName());
+//            existingUser.setEmail(user.getEmail());
+//            existingUser.setAge(user.getAge());
+//            return userRepository.save(existingUser);
+//        } else {
+//            return null;
+//        }
+//    }
+//
+//    public boolean deleteUser(String email) {
+//        User existingUser = userRepository.findByEmail(email);
+//        if (existingUser != null) {
+//            userRepository.deleteByEmail(email);
+//            return true;
+//        } else {
+//            return false;
+//        }
+//    }
+//
+//
+//    public User createUser(User user) {
+//        if (userRepository.existsByEmail(user.getEmail())) {
+//            return null;
+//        }
+//
+//        User savedUser = userRepository.save(user);
+//
+////        // Run logging and audit in parallel
+////        CompletableFuture.runAsync(() -> auditService.logToFile(savedUser));
+////        CompletableFuture.runAsync(() -> auditService.saveToAuditTable(savedUser));
+//        auditService.logToFile(savedUser);
+//        auditService.saveToAuditTable(savedUser);
+//        return savedUser;
+//    }
 
 //    public Optional<User> getUserByEmail(String email) {
 //        return userRepository.findByEmail(email);
