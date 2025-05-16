@@ -21,9 +21,17 @@ public class UserController {
     private UserService userService;
 
 
+//    @PostMapping
+//    public ResponseEntity<User> createUser(@RequestBody User user) {
+//        return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+//    }
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        User created = userService.createUser(user);
+        if (created == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists.");
+        }
+        return ResponseEntity.ok(created);
     }
 
     @GetMapping
