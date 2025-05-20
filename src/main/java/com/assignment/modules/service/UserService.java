@@ -19,6 +19,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AuditService auditService;
+
     public List<UserDTO> getAllUsers() {
         return userRepository.findAllProjectedBy();
     }
@@ -53,9 +56,16 @@ public class UserService {
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             return null;
-//            throw new IllegalArgumentException("Email already exists");
         }
-        return userRepository.save(user);
+
+        User savedUser = userRepository.save(user);
+
+//        // Run logging and audit in parallel
+//        CompletableFuture.runAsync(() -> auditService.logToFile(savedUser));
+//        CompletableFuture.runAsync(() -> auditService.saveToAuditTable(savedUser));
+        auditService.logToFile(savedUser);
+        auditService.saveToAuditTable(savedUser);
+        return savedUser;
     }
 
 //    public Optional<User> getUserByEmail(String email) {

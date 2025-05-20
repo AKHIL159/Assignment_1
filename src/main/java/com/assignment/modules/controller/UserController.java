@@ -25,6 +25,14 @@ public class UserController {
     public ResponseEntity<User> createUser(@RequestBody User user) {
         return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
     }
+//@PostMapping
+//    public ResponseEntity<?> createUser(@RequestBody User user) {
+//        try {
+//             ResponseEntity.ok(userService.createUser(user));
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+//    }
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
